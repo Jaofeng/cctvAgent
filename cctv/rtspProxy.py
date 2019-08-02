@@ -68,6 +68,7 @@ class _Camera(threading.Thread):
         self.daemon = True
         self.__evt_exit = threading.Event()
         self.__svr = svr
+        self.__lock = threading.Lock()
         self.url = url
         self.clients = []
         self.camera = cv2.VideoCapture(url)
@@ -91,6 +92,7 @@ class _Camera(threading.Thread):
             if ret:
                 thds = []
                 for clt in self.clients:
+                    if self.__evt_exit.isSet(): break
                     pkgs = self.__encodingImage(frame, clt['resolution'])
                     if not pkgs: continue
                     thd = threading.Thread(target=self.__sendPackages, daemon=True, args=(clt, pkgs))
@@ -105,20 +107,25 @@ class _Camera(threading.Thread):
 
     def stop(self):
         self.__evt_exit.set()
-        time.sleep(0.5)
+        time.sleep(0.1)
+        if self.camera and self.camera.isOpened():
+            self.camera.release()
 
     def appendClient(self, client):
-        ids = [c for c in self.clients if c['id'] == client['id']]
-        if not ids:
-            self.clients.append(client)
-        else:
-            ids[0].update(client)
+        with self.__lock:
+            ids = [c for c in self.clients if c['id'] == client['id']]
+            if not ids:
+                self.clients.append(client)
+            else:
+                ids[0].update(client)
 
     def removeClient(self, client):
-        [self.clients.remove(c) for c in self.clients if c['id'] == client['id']]
+        with self.__lock:
+            [self.clients.remove(c) for c in self.clients if c['id'] == client['id']]
 
     def updateClient(self, client):
-        [c.update(client) for c in self.clients if c['id'] == client['id']]
+        with self.__lock:
+            [c.update(client) for c in self.clients if c['id'] == client['id']]
 
     def __find(self, id):
         ids = [c for c in self.clients if c['id'] == id]
@@ -154,7 +161,7 @@ class _Camera(threading.Thread):
         if not pkgs: return
         try:
             self.__svr.send_message(client, f"::{len(pkgs)}::")
-            [self.__svr.send_message(client, pkg) for pkg in pkgs]
+            [self.__svr.send_message(client, pkg) for pkg in pkgs if not self.__evt_exit.isSet()]
         except:
             pass
 
@@ -232,10 +239,14 @@ class RtspProxy(object):
         self.log.info(f'RTSP WebSocket Proxy Started @ \x1B[92mws://{ip}:{self.host[1]}/\x1B[39m')
 
     def stop(self):
-        [cam.stop() for cam in self.cameras]
-        [self.cameras.remove(cam) for cam in self.cameras]
+        for cam in self.cameras:
+            for c in self.clients:
+                cam.removeClient(c)
+                self.clients.remove(c)
+            cam.stop()
+            cam.join(0.1)
+            self.cameras.remove(cam)
         self.__svr.server_close()
-        [self.clients.remove(c) for c in self.clients]
         self.log.warn(f'RTSP WebSocket Proxy Stoped')
 
 
@@ -303,7 +314,7 @@ class HttpMJpegPusher(threading.Thread):
 
     def stop(self):
         self.__evt_exit.set()
-        time.sleep(0.5)
+        time.sleep(0.1)
 
 
 if __name__ == "__main__":

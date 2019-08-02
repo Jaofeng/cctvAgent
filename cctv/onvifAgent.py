@@ -97,13 +97,19 @@ class OnvifAgent(object):
         '''
         if not url: return None
         parsed = urlparse(url)
-        parts = parsed.netloc.split(':')
+        if parsed.scheme != 'http':
+            self.log.warn(f'"url"({url}) is not a ONVIF Service URL!')
+            return None
+        parts = parsed.netloc.split('@')[-1].split(':')
         ip = parts[0]
         port = parts[1] if len(parts) > 1 else 80
         authed = False
         self.log.debug(f'Get ONVIF information from \x1B[92m{url}\x1B[39m')
         res = {'url': url, 'ip': ip, 'port': port, 'hostName': ''}
-        if not auths: auths = DEF_AUTHS
+        if not auths and not parsed.username:
+            auths = DEF_AUTHS
+        elif parsed.username:
+            auths = [(parsed.username, parsed.password)]
         for authinfo in auths:
             if authed: break
             # Try get Camera Info

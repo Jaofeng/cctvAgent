@@ -16,7 +16,7 @@ _epFilter = re.compile(r'(http://)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:?\d{0,5})
 
 
 @unique
-class CCTV_Events(Enum):
+class AgentEvents(Enum):
     """
     事件代碼列舉
     提供 `CCTV_Worker` 所有類別回呼用事件的鍵值
@@ -28,14 +28,21 @@ class CCTV_Events(Enum):
     OFFLINE = 'offline'
 
 
-class CCTV_Worker:
+class CCTV_Agent:
     def __init__(self, ipcams=None, log=None):
+        '''建立 IP Cam 代理伺服器
+
+        傳入:
+            ipcams  : list[dict] -- IP Cam 攝影機清單, 其格式如下
+                      [{'ID':str, 'IP':str, 'Profile':str, 'User':str, 'Passwd':str}, ...]
+            log     : 已建立的 logging.logger
+        '''
         self.__events: dict = {
-            CCTV_Events.FOUND: None,
-            CCTV_Events.JOINED: None,
-            CCTV_Events.UPDATE: None,
-            CCTV_Events.ONLINE: None,
-            CCTV_Events.OFFLINE: None,
+            AgentEvents.FOUND: None,
+            AgentEvents.JOINED: None,
+            AgentEvents.UPDATE: None,
+            AgentEvents.ONLINE: None,
+            AgentEvents.OFFLINE: None,
         }
         self.__ssdp = SsdpService()
         self.__ssdp.bind(EventTypes.STARTED,self.__Started)
@@ -55,7 +62,8 @@ class CCTV_Worker:
             self.log.warn = self.log.warning = nolog
             self.log.error = self.log.exception = nolog
 
-    ipcams = property(fget=lambda self: self.__devs)
+    ipcams: List[Dict] = property(fget=lambda self: self.__devs, doc='''已探索到的 IP Cam 清單, 
+    傳回''')
 
     def __getitem__(self, **kwargs) -> Optional[str]:
         for k in ['ip', 'name']:
@@ -111,8 +119,8 @@ class CCTV_Worker:
             d = AttribDict(**dd)
             fd = self.findDevices(ip=d.ip)
             if not fd or len(fd) == 0:
-                if self.__events[CCTV_Events.FOUND]:
-                    self.__events[CCTV_Events.FOUND](d.ip, d.url)
+                if self.__events[AgentEvents.FOUND]:
+                    self.__events[AgentEvents.FOUND](d.ip, d.url)
                 self.__appedIpCam({
                     'ip': d.ip, 'svcUrl': d.url, 'name': d.hostName,
                     'profiles': d.profiles,
@@ -128,8 +136,8 @@ class CCTV_Worker:
                     fd['svcUrl'] = d.url
                     fd['profiles'] = d.profiles
                     self.log.debug(fd['profiles'])
-                    if self.__events[CCTV_Events.UPDATE]:
-                        self.__events[CCTV_Events.UPDATE](fd['ip'], fd['profiles'])
+                    if self.__events[AgentEvents.UPDATE]:
+                        self.__events[AgentEvents.UPDATE](fd['ip'], fd['profiles'])
 
     def clear(self):
         self.__ssdp.clearDevices()
@@ -173,8 +181,8 @@ class CCTV_Worker:
                 if oi:
                     fd['profiles'] = oi['profiles']
                     fd['name'] = oi['hostName']
-                if self.__events[CCTV_Events.UPDATE]:
-                    self.__events[CCTV_Events.UPDATE](fd['ip'], fd['profiles'])
+                if self.__events[AgentEvents.UPDATE]:
+                    self.__events[AgentEvents.UPDATE](fd['ip'], fd['profiles'])
 
     def __onLeaved(self, svc, di):
         pass
@@ -214,8 +222,8 @@ class CCTV_Worker:
                 self.__devs.append(AttribDict(**ipc))
             else:
                 self.__devs.append(ipc)
-        if self.__events[CCTV_Events.JOINED]:
-            self.__events[CCTV_Events.JOINED](ipc)
+        if self.__events[AgentEvents.JOINED]:
+            self.__events[AgentEvents.JOINED](ipc)
 
     def __getDevInfoFromSsdp(self, url: str):
         buf = None

@@ -1,0 +1,17 @@
+﻿* { box-sizing: border-box; }
+html, body { background-color: black; color: white; width: 100%; height: 100%; font-size: 24px; overflow: hidden; margin: 0px; padding: 0px; font-family: Arial, Helvetica, sans-serif; }
+table { display: table; border-collapse: collapse; border-spacing: 0px; border: 0px; }
+tr { display: table-row; vertical-align: middle; border-color: inherit; }
+td { display: table-cell; vertical-align: middle; padding: 0px; }
+video { float: left; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 100%; }
+div.vCenter { width:100%; height: 100%; text-align: center; }
+div.vCenter::before { content: ''; width: 0px; height: 100%; display: inline-block; vertical-align: middle; }
+#divDialog { display: none; }
+.ui-dialog .ui-dialog-titlebar { padding: .2em .4em !important; }
+.ui-dialog .ui-dialog-buttonpane { padding: 0px !important; }
+.ui-widget-overlay { background: black !important ; opacity: 0.5 !important; }
+
+/* 直式螢幕 */
+@media screen and (orientation:portrait) { }
+/* 橫式螢幕 */
+@media screen and (orientation:landscape){ }
