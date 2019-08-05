@@ -270,7 +270,6 @@ def _WebGET(handler, cnt):
     except:
         quality = 0
     cnt['handled'] = True
-    print(f'url: {ri.url}, reslution: {resolution}, quality: {quality}')
     pxy = HttpMJpegPusher(handler, urls[0], resolution, quality)
     pxy.start()
 
