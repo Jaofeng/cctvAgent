@@ -82,8 +82,9 @@ RTSP over HTTP 的原理其實很簡單：
 3. 伺服器在接取終端連線，並取得請求的資料後，開始使用 `OpenCV` 自以 `VideoCapture()` 函式所建立的 `camera` 物件中讀取影像(影格)
 4. 取得影格後，調整解析度、品質後，再轉換成 JPEG 圖檔內容
 5. 將 JPEG 圖檔內容轉換成 `Base64` 字串(Bytes to Base64，原始大小如 30KBytes，會擴張成 40KBytes，請參閱[維基百科](https://zh.wikipedia.org/wiki/Base64))
-6. 以 `32KByte` 為一單位，切割字串內容傳遞給終端的 JavaScript
-7. JavaScript 組合這些字串內容後，直接指給 `img.src`
+6. 以 `32KByte` 為一單位，切割字串內容
+7. 傳送給 ***請求同一個 RTSP 的終端 JavaScript***
+8. 各終端的 JavaScript 組合這些字串內容後，直接指給 `img.src`
 
     開發過程中發現傳輸時，常常因為網路品質不佳等原因，容易產生終端(JavaScript WebSocket)解析封包長度錯誤，而造成畫面無法顯示、卡頓、斷線等狀況。
     
