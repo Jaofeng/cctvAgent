@@ -5,7 +5,7 @@
 
 一般的作法是直接利用 NVR 廠商提供的 SDK/Player 進行顯示播放，但廠商提供的 SDK/Player 是 Windows base 的，而終端設備卻是 Linux 且 GUI 為 Web base，不得不自行從 IP Cam 接取 RTSP 影像串流。
 
-雖然網路上有很多資源可以幾乎不花心力就可以做到所需功能，但還是想研究一下何謂 `SSPD、ONVIF、RTSP、Streaming` 等等相關知識，所以才會有這個專案。
+雖然網路上有很多資源可以幾乎不花心力就可以做到所需功能，但還是想研究一下何謂 `SSPD`、`ONVIF`、`RTSP`、`Streaming` 等等相關知識，所以才會有這個專案。
 
 本人非影像專業工程師，如有謬論或錯誤，懇請各位先進不吝告知
 
@@ -52,12 +52,12 @@
   * agent.py  
     負責處理 IP Cam 探索，使用 `UPnP/SSDP` 與 `WS-Discovery` 兩種技術，如果不需要主動搜尋 IP Cam，可不使用此模組
   * onvifAgent.py  
-    ONVIF 協定相關資料取得，譬如 IP Cam 的 `Profile、串流網址、解析度、編碼模式等`
+    `ONVIF` 協定相關資料取得，譬如 IP Cam 的 `Profile`、`串流網址`、`解析度`、`編碼模式`等
   * rtspProxy.py  
     使用 `OpenCV` 讀取 `RTSP` 串流，再以 `WebSocket` 或 `Motion JPEG(M-Jpeg) over HTTP` 串流輸出
 * www 是 HTML 網頁目錄
 * cctvAgent.py  
-  程式進入點，執行後可使用 help 檢視可使用的指令
+  程式進入點，執行後可使用 `help` 檢視可使用的指令
 * webSvc.py  
   繼承自 `BaseHTTPRequestHandler` 的 HTTP Web Server 模組
 * jfNet 模組是本人另一專案, 請參閱 [SocketTest](https://github.com/Jaofeng/SocketTest)
@@ -68,7 +68,7 @@ RTSP over HTTP 的原理其實很簡單：
 
     當終端要求取得影像時，讀取當下的影像(影格)並轉換成圖檔傳送終端
 
-而 `rtspProxy.py` 使用 **`OpenCV`** 向 **`RTSP`** 來源拉流(讀取當下影像)，再將讀取的影像經壓縮或調整後，使用 `WebSocket` 或原 `HTTP GET Connection` 送至終端瀏覽器顯示
+而 `rtspProxy.py` 使用 `OpenCV` 向 `RTSP` 來源拉流(讀取當下影像)，再將讀取的影像經壓縮或調整後，使用 `WebSocket` 或原來的 `HTTP GET Connection` 送至終端瀏覽器，再經由 HTML `img` tag 顯示
 
 以下將以三部分說明：
 
@@ -81,8 +81,8 @@ RTSP over HTTP 的原理其實很簡單：
 2. 終端使用 `rtstProxy(.min).js` 連線至伺服器，連線後，發送請求資料給伺服器
 3. 伺服器在接取終端連線，並取得請求的資料後，開始使用 `OpenCV` 自以 `VideoCapture()` 函式所建立的 `camera` 物件中讀取影像(影格)
 4. 取得影格後，調整解析度、品質後，再轉換成 JPEG 圖檔內容
-5. 將 JPEG 圖檔內容轉換成 `Base64` 字串(Bytes to Base64，原始大小如 30KBytes，會擴張成 40KBytes，請參閱[維基百科](https://zh.wikipedia.org/wiki/Base64))
-6. 以 `32KByte` 為一單位，切割字串內容
+5. 將 JPEG 圖檔內容轉換成 `Base64` 字串(*Bytes to Base64，原始大小如 30KBytes，會擴張成 40KBytes，請參閱[維基百科](https://zh.wikipedia.org/wiki/Base64)*)
+6. 以 `32KBytes` 為一單位，切割字串內容
 7. 傳送給 ***請求同一個 RTSP 的終端 JavaScript***
 8. 各終端的 JavaScript 組合這些字串內容後，直接指給 `img.src`
 
@@ -93,13 +93,14 @@ RTSP over HTTP 的原理其實很簡單：
 
 ### *M-JPEG 傳輸方式*
 1. 伺服器取得終端的 `img.src` HTTP GET 請求後，先於 `HTTP Header` 中回應 `Content-Type: multipart/x-mixed-replace;boundary={自訂字串}`
-2. 再自 `camera` 取得影格，經處理後，再於 `HTTP Header` 加上 `Content-Type: image/jpeg`、`Content-Length` 與 `boundary` 後，直接將圖像內容以 `Bytes` 方式傳送至終端
-3. 瀏覽器會自動以 `boundary` 拆解圖像內容後餵給 `img`
+2. 再自 `camera` 取得影格，並依傳入的 URL 參數，調整解析度、品質後，再轉換成 JPEG 圖檔內容
+3. 於 `HTTP Header` 加上 `Content-Type: image/jpeg`、`Content-Length` 與 `boundary` 後，直接將 JPEG 圖像內容以 `Bytes` 方式傳送至終端
+4. 瀏覽器會自動以 `boundary` 拆解圖像內容後餵給 `img`
 
 
 ## *使用說明*
 * IP Cam 的 IP 位址與 `Profile ID`，請於 `cctvAgent.py` 與 `index.js` 中設定，或請自行修改成讀取參數檔的方式載入
-* 使用 `WebSocket` 傳輸串流時，需搭配 js 目錄中的 `rtspProxy(.min).js` 使用
+* 使用 `WebSocket` 傳輸串流時，需搭配 `rtspProxy(.min).js` 使用
 * 如需將 `WebSocket` 串流方式提供給非本機連線，請自行將 `index.js` 內的 `cctv.ProxyHost` 修改成本機 IP
 * `rtspProxy(.min).js` 與 M-Jpeg 的使用方式，請參閱 `index.js` 內的 **`useRtspProxy()`** 與 **`useHttpMJpegPuller()`** 兩函式
 * 終端顯示順暢與否、是否會延遲，取決於原始 RTSP 串流解析度、網路品質、終端顯示解析度等等
