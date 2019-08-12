@@ -9,7 +9,7 @@ var cctv = {
         { 'ID': 'A-1', 'OSD': 'OSD 顯示', 'Type': 'mjpeg' }
     ],
     Stream: [
-        { 'ID': 'A-1', 'IP': '172.18.0.74', 'Url': 'rtsp://172.18.0.74/onvif-media/media.amp?streamprofile=Profile2&audio=0' },
+        { 'ID': 'A-1', 'IP': '172.18.0.87', 'Url': 'rtsp://172.18.0.87/onvif-media/media.amp?streamprofile=Profile2&audio=0' },
     ],
 }
 var selectedCar = 1,

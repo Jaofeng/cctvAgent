@@ -31,7 +31,7 @@ readline.parse_and_bind('set editing-mode vi')
 readline.set_completer(completer.complete)
 
 _IpCams = [
-    {"ID": "A-1", "IP": "172.18.0.74", "Profile": "OnvifProfile2", "User": "admin", "Passwd": ""}
+    {"ID": "A-1", "IP": "172.18.0.87", "Profile": "OnvifProfile2", "User": "admin", "Passwd": ""}
 ]
 _HttpPort = 8000
 _ProxyPort = 8001

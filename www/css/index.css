@@ -7,7 +7,7 @@
 }
 .FourPanel::before, .CarBtn::before, .LayoutStyle div::before
 { content: ''; width: 0px; height: 100%; display: inline-block; vertical-align: middle; }
-.FourPanel img { float: left; /*min-inline-size: 100%;*/ max-width: 100%; max-height: 100%; }
+.FourPanel img { float: left; min-inline-size: 100%; max-width: 100%; max-height: 100%; }
 .BoxingText { color: white; font-size: 24px; text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black; }
 .BoxingText.Float { z-index: 99; position: absolute; }
 .BoxingText.Left { left: 10px; }
