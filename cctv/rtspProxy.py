@@ -44,11 +44,11 @@ class _wsHandler(WebSocketHandler):
             return
         self.path = hd.group(1)
         self.headers = _parse_headers(message)
-        upgrade = re.search('\nupgrade[\s]*:[\s]*websocket', message.lower())
+        upgrade = re.search(r'\nupgrade[\s]*:[\s]*websocket', message.lower())
         if not upgrade:
             self.keep_alive = False
             return
-        key = re.search('\n[sS]ec-[wW]eb[sS]ocket-[kK]ey[\s]*:[\s]*(.*)\r\n', message)
+        key = re.search(r'\n[sS]ec-[wW]eb[sS]ocket-[kK]ey[\s]*:[\s]*(.*)\r\n', message)
         if key:
             key = key.group(1)
         else:
