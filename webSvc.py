@@ -260,7 +260,7 @@ class WebHandler(BaseHTTPRequestHandler):
         if ctype == 'multipart/form-data':
             content = cgi.parse_multipart(self.rfile, pdict)
         elif ctype in ['application/x-www-form-urlencoded', 'application/json', 'application/soap+xml']:
-            length = int(self.headers.get('content-length'))
+            length = int(self.headers.get('content-length', 0))
             if length:
                 ctx = self.rfile.read(length).decode('utf-8')
                 if ctype == 'application/json':
