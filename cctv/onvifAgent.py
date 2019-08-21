@@ -30,10 +30,8 @@ class OnvifAgent(object):
             self.ipcams = []
         for ipc in self.ipcams:
             ipc['Port'] = ipc.get('Port', 80)
-            if ipc['Port'] and ipc['Port'] != 80:
-                ipc['SvcUrl'] = f'http://{ipc["IP"]}:{ipc["Port"]}/onvif/device_service'
-            else:
-                ipc['SvcUrl'] = f'http://{ipc["IP"]}/onvif/device_service'
+            ipc['SvcUrl'] = 'http://{}{}/onvif/device_service'.format(
+                ipc["IP"], f':{ipc["Port"]}' if ipc['Port'] and ipc['Port'] != 80 else '')
         self.__started = False
         self.__seenSvcs = []
         self.__camInfo = []
