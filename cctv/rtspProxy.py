@@ -3,17 +3,19 @@
 
 # Ref.: https://www.itread01.com/content/1547446926.html
 
-import threading, time, cv2, base64, types, json, re
+import os, threading, time, cv2, base64, types, json, re
 from websocket_server import WebsocketServer, WebSocketHandler
 from socketserver import TCPServer
 
 
-__all__ = ['RtspProxy', 'HttpMJpegPusher']
+__all__ = ['RtspProxy', 'HttpMJpegPusher']  
+# 設定 OpenCV 的 VideoCapture() 拉 RTSP 流時，使用 UDP....... ?? (未驗證)
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp"
 
 
 def _parse_headers(had):
     reg = re.compile(r'(\S*):\s?([^\r]*)\r?')
-    return dict(reg.findall(had))
+    return dict([(k.lower(), v) for k, v in reg.findall(had)])
 
 
 class _wsServer(WebsocketServer):
@@ -38,12 +40,14 @@ class _wsHandler(WebSocketHandler):
         增加 path 與 headers 兩屬性
         '''
         message = self.request.recv(1024).decode().strip()
+        # 額外處理接到的內容，轉化成 Request Path & Headers
         hd = re.search(r'GET (.*) HTTP/\d\.\d', message)
         if not hd:
             self.keep_alive = False
             return
         self.path = hd.group(1)
         self.headers = _parse_headers(message)
+        # 
         upgrade = re.search(r'\nupgrade[\s]*:[\s]*websocket', message.lower())
         if not upgrade:
             self.keep_alive = False
@@ -152,10 +156,12 @@ class _Camera(threading.Thread):
         if not ret: return None
         base64_data = base64.b64encode(image)
         buf = f'data:image/jpeg;base64,{base64_data.decode()}'
-        # 拆解封包內容
-        pks = len(buf) / size
-        pks = int(pks) + 1 if int(pks) != pks else int(pks)
-        return [f'~{int(i/size)+1}~{buf[i:i + size]}' for i in range(0, len(buf), size)]
+        # # 拆解封包內容
+        # # pks = len(buf) / size
+        # # pks = int(pks) + 1 if int(pks) != pks else int(pks)
+        # # 縮短為以下計算式
+        # pks = int((len(buf) + (size - 1)) / size)
+        return [f'~{int(i / size) + 1}~{buf[i:i + size]}' for i in range(0, len(buf), size)]
 
     def __sendPackages(self, client, pkgs):
         if not pkgs: return
